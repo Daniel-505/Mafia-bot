@@ -20,7 +20,7 @@ async def crear_partida(ctx, cantidad):
     estado.doctor_channel = await guild.create_text_channel("doctor-secreto", overwrites=overwrites)
     estado.detective_channel = await guild.create_text_channel("detective-secreto", overwrites=overwrites)
 
-    await ctx.send(f"🎲 Partida creada para {cantidad} jugadores.\nUsa `!mafia unirme` o `!mafia npc` para agregar bots.\nCuando estés listo, usa `!mafia iniciar`.")
+    await ctx.send(f"🎲 Partida creada para {cantidad} jugadores.\nUsa `!mafia unirme`.\nCuando estés listo, usa `!mafia iniciar` y si faltan jugadores se autocompleta con Bots.")
 
 async def unirse(ctx):
     if ctx.author in estado.jugadores:
@@ -80,11 +80,11 @@ async def iniciar_partida(ctx):
         if isinstance(jugador, discord.Member):
             mensaje = f"🎭 Tu rol es: **{rol}**.\n"
             if rol == "Mafioso":
-                mensaje += f"😈 Usa `!mafia matar @jugador` en: {estado.mafioso_channel.jump_url}"
+                mensaje += f"😈 Usa `!mafia matar @jugador` o `!mafia matar NPC <numero>` en: {estado.mafioso_channel.jump_url}"
             elif rol == "Doctor":
-                mensaje += f"🩺 Usa `!mafia salvar @jugador` en: {estado.doctor_channel.jump_url}"
+                mensaje += f"🩺 Usa `!mafia salvar @jugador` o `!mafia salvar NPC <numero>` en: {estado.doctor_channel.jump_url}"
             elif rol == "Detective":
-                mensaje += f"🔍 Puedes investigar jugadores en: {estado.detective_channel.jump_url}"
+                mensaje += f"🔍 Usa `!mafia investigar @jugador` o `!mafia investigar NPC <numero>` en: {estado.detective_channel.jump_url}"
             try:
                 await jugador.send(mensaje)
             except:

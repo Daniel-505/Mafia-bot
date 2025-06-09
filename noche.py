@@ -47,7 +47,7 @@ async def noche(ctx):
         estado.jugador_salvado = None
         estado.votos.clear()
         estado.fase = "día"
-        await ctx.send("☀️ Ha amanecido. Usa `!mafia votar @jugador` para votar.")
+        await ctx.send("☀️ Ha amanecido. Usa `!mafia votar @jugador` o `!mafia votar NPC <numero>` para votar.")
 
     await anunciar_inicio()
     await acciones_npc()
