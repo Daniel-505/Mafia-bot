@@ -1,40 +1,56 @@
-# noche.py
-import asyncio
 import estado
-from dia import verificar_ganador
+import random
+import asyncio
+import discord
 
-async def eliminar_permisos(jugador):
-    if estado.mafioso_channel:
-        await estado.mafioso_channel.set_permissions(jugador, read_messages=False, send_messages=False)
-    if estado.doctor_channel:
-        await estado.doctor_channel.set_permissions(jugador, read_messages=False, send_messages=False)
-    if estado.detective_channel:
-        await estado.detective_channel.set_permissions(jugador, read_messages=False, send_messages=False)
+def nombre_mencion(jugador):
+    return jugador.mention if isinstance(jugador, discord.Member) else jugador.nombre
 
 async def noche(ctx):
-    estado.fase = "noche"
-    estado.jugador_muerto = None
-    estado.jugador_salvado = None
+    async def anunciar_inicio():
+        await ctx.send("🌙 La noche ha comenzado. Mafioso, Doctor y Detective, realicen sus acciones.")
 
-    await ctx.send("🌙 Es de noche. Todos los jugadores duermen...")
-    await asyncio.sleep(60)  # Puedes ajustar el tiempo según tu preferencia
-    await amanecer(ctx)
+    async def acciones_npc():
+        vivos = [j for j in estado.jugadores if j != estado.jugador_muerto]
 
-async def amanecer(ctx):
-    estado.fase = "día"
+        # Mafioso NPC elige a alguien al azar
+        if isinstance(estado.mafioso, estado.NPC):
+            objetivos = [j for j in vivos if j != estado.mafioso]
+            if objetivos:
+                estado.jugador_muerto = random.choice(objetivos)
+                await ctx.send(f"🤖 El mafioso ha elegido a **{nombre_mencion(estado.jugador_muerto)}** como su víctima.")
 
-    if estado.jugador_muerto is not None and estado.jugador_muerto == estado.jugador_salvado:
-        await ctx.send(f"☀️ Amanece y **{estado.jugador_salvado.name}** fue atacado, ¡pero el doctor lo salvó! 🩺")
-        estado.jugador_muerto = None
-    elif estado.jugador_muerto is not None:
-        await ctx.send(f"☀️ Amanece y encontramos el cuerpo de **{estado.jugador_muerto.name}**. Era **{estado.roles.get(estado.jugador_muerto, 'Desconocido')}**.")
-        if estado.jugador_muerto in estado.jugadores:
+        # Doctor NPC elige a alguien al azar
+        if isinstance(estado.doctor, estado.NPC):
+            estado.jugador_salvado = random.choice(vivos)
+            await ctx.send(f"🤖 El doctor ha decidido salvar a **{nombre_mencion(estado.jugador_salvado)}** esta noche.")
+
+        # Detective NPC elige a alguien al azar
+        if isinstance(estado.detective, estado.NPC):
+            objetivo = random.choice([j for j in vivos if j != estado.detective])
+            rol = estado.roles.get(objetivo, "Desconocido")
+            await ctx.send(f"🔍 El detective investigó a **{nombre_mencion(objetivo)}** y descubrió que es **{rol}**.")
+
+    async def esperar_acciones():
+        await asyncio.sleep(5)  # Simula tiempo de noche si es necesario
+
+    async def procesar_resultado():
+        if estado.jugador_muerto and estado.jugador_muerto != estado.jugador_salvado:
+            await ctx.send(f"💀 **{nombre_mencion(estado.jugador_muerto)}** ha muerto esta noche.")
             estado.jugadores.remove(estado.jugador_muerto)
-        if estado.jugador_muerto in estado.roles:
-            del estado.roles[estado.jugador_muerto]
+            estado.roles.pop(estado.jugador_muerto, None)
+        else:
+            await ctx.send("💤 Nadie murió esta noche.")
 
-    estado.jugador_salvado = None
-    await verificar_ganador(ctx)
+    async def terminar():
+        estado.jugador_muerto = None
+        estado.jugador_salvado = None
+        estado.votos.clear()
+        estado.fase = "día"
+        await ctx.send("☀️ Ha amanecido. Usa `!mafia votar @jugador` para votar.")
 
-    if estado.fase == "día":
-        await ctx.send("Es el momento de votar. Usen !mafia votar @jugador para elegir a alguien.")
+    await anunciar_inicio()
+    await acciones_npc()
+    await esperar_acciones()
+    await procesar_resultado()
+    await terminar()

@@ -8,7 +8,7 @@ Guía de instalación y ejecución del bot de Mafia (Discord)
    git clone https://github.com/usuario/bot-mafia.git
    cd bot-mafia
 2. Instalar dependencias:
-   pip install [discord.py](http://discord.py/)
+   pip install -r requirements.txt
 3. Crear un bot en Discord:
    - Ir a https://discord.com/developers/applications
    - Crear nueva aplicación > ir a la pestaña "Bot"
